@@ -37,6 +37,13 @@ void setup() {
 
 void loop() {
   int flameState = digitalRead(FLAME_PIN);
+
+  // Report the current sensor state. The module uses active-low output.
+  if (flameState == LOW) {
+    Serial.println("Flame detected - sensor output is LOW");
+  } else {
+    Serial.println("No flame detected - environment is safe");
+  }
   
   // Trigger actions only on state change
   if (flameState != lastFlameState) {
