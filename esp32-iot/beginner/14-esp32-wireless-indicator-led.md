@@ -166,5 +166,5 @@ This project runs in MbedO **interpreted C++ mode**.
 
 ## Related Projects
 - [01 - ESP32 WiFi Station Connection](01-esp32-wifi-station-connection.md)
-- [05 - ESP32 WiFi Disconnect and Auto-reconnect routine](05-esp32-wifi-disconnect-and-auto-reconnect-routine.md)
+- [05 - ESP32 WiFi Disconnect and Polling Auto-reconnect routine](05-esp32-wifi-disconnect-and-auto-reconnect-routine.md)
 - [15 - ESP32 WiFi Signal Alert buzzer](15-esp32-wifi-signal-alert-buzzer.md)

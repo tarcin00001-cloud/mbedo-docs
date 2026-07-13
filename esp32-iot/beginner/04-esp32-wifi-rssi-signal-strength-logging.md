@@ -18,37 +18,11 @@ No external wiring is required. The ESP32 uses its built-in WiFi antenna.
 
 ## Code
 ```cpp
-// WiFi RSSI Signal Strength Logging (dBm -> Quality %)
+// WiFi RSSI Signal Strength Logging
 #include <WiFi.h>
 
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
-
-// Helper function to map RSSI dBm values to a quality percentage
-// RSSI range is typically -50 dBm (Excellent) to -100 dBm (No signal)
-int getSignalQuality(int rssi) {
-  int quality = 0;
-  
-  if (rssi <= -100) {
-    quality = 0;
-  } else if (rssi >= -50) {
-    quality = 100;
-  } else {
-    // Linear map: -100 dBm is 0%, -50 dBm is 100%
-    // formula: quality = 2 * (rssi + 100)
-    quality = 2 * (rssi + 100);
-  }
-  return quality;
-}
-
-// Helper to describe signal level
-const char* getSignalLabel(int quality) {
-  if (quality >= 80) return "Excellent (Strong Signal)";
-  if (quality >= 60) return "Good (Stable Connection)";
-  if (quality >= 40) return "Fair (Acceptable, minor lag)";
-  if (quality >= 20) return "Weak (Prone to drops)";
-  return "Very Weak (Unstable / Disconnected)";
-}
 
 void setup() {
   Serial.begin(115200);
@@ -57,36 +31,19 @@ void setup() {
   Serial.println("\nWiFi RSSI Signal Analyzer");
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nConnected successfully!");
 }
 
 void loop() {
   if (WiFi.status() == WL_CONNECTED) {
-    // 1. Read RSSI in dBm
-    int rssi = WiFi.RSSI();
-    
-    // 2. Map to quality percentage
-    int quality = getSignalQuality(rssi);
-    
-    // 3. Get descriptive label
-    const char* label = getSignalLabel(quality);
-    
+    // 1. Read and print RSSI in dBm
     Serial.print("WiFi RSSI: ");
-    Serial.print(rssi);
-    Serial.print(" dBm | Quality: ");
-    Serial.print(quality);
-    Serial.print("% | Health: ");
-    Serial.println(label);
+    Serial.print(WiFi.RSSI());
+    Serial.println(" dBm");
+    delay(2000); // Check every 2 seconds
   } else {
-    Serial.println("Network offline!");
+    Serial.print(".");
+    delay(500);
   }
-  
-  delay(2000); // Check every 2 seconds
 }
 ```
 

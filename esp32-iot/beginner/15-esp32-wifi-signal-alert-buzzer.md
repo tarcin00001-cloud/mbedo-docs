@@ -149,5 +149,5 @@ This project runs in MbedO **interpreted C++ mode**.
 
 ## Related Projects
 - [04 - ESP32 WiFi RSSI Signal strength logging](04-esp32-wifi-rssi-signal-strength-logging.md)
-- [05 - ESP32 WiFi Disconnect and Auto-reconnect routine](05-esp32-wifi-disconnect-and-auto-reconnect-routine.md)
+- [05 - ESP32 WiFi Disconnect and Polling Auto-reconnect routine](05-esp32-wifi-disconnect-and-auto-reconnect-routine.md)
 - [14 - ESP32 Wireless indicator LED](14-esp32-wireless-indicator-led.md)

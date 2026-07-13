@@ -45,56 +45,29 @@ void setup() {
   Serial.println("==================================");
   
   // 1. Configure WiFi mode to Station (client)
-  // Prevents the ESP32 from hosting its own access point in the background
   WiFi.mode(WIFI_STA); 
   
   // 2. Start connection sequence
   Serial.print("Connecting to SSID: ");
   Serial.println(ssid);
-  
   WiFi.begin(ssid, password);
-  
-  // 3. Monitor connection status (Blink LED while connecting)
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-    digitalWrite(STATUS_LED, HIGH);
-    delay(250);
-    digitalWrite(STATUS_LED, LOW);
-    delay(250);
-    
-    Serial.print(".");
-    attempts++;
-  }
-  
-  // 4. Confirm connection results
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n\nConnection Successful!");
-    Serial.print("Assigned IP: ");
-    Serial.println(WiFi.localIP());
-    
-    // Light LED solid HIGH to indicate successful connection
-    digitalWrite(STATUS_LED, HIGH); 
-  } else {
-    Serial.println("\n\nConnection Failed! Timeout reached.");
-    // Fast flash LED to indicate error
-    for (int i = 0; i < 10; i++) {
-      digitalWrite(STATUS_LED, HIGH); delay(50);
-      digitalWrite(STATUS_LED, LOW);  delay(50);
-    }
-  }
 }
 
 void loop() {
-  // Periodically check if connection is still active
+  // 3. Monitor connection status inside loop
   if (WiFi.status() == WL_CONNECTED) {
     digitalWrite(STATUS_LED, HIGH);
+    Serial.println("\nConnection Successful!");
+    Serial.print("Assigned IP: ");
+    Serial.println(WiFi.localIP());
+    delay(5000); // Check status less frequently once connected
   } else {
-    // Loss of connection: flash LED slowly
-    digitalWrite(STATUS_LED, LOW);
-    delay(500);
+    // Blink LED while connecting
     digitalWrite(STATUS_LED, HIGH);
-    delay(500);
-    Serial.println("Alert: WiFi Connection Lost!");
+    delay(250);
+    digitalWrite(STATUS_LED, LOW);
+    delay(250);
+    Serial.print(".");
   }
 }
 ```
@@ -152,5 +125,5 @@ This project runs in MbedO **interpreted C++ mode**.
 
 ## Related Projects
 - [02 - ESP32 WiFi Connection Status Log](02-esp32-wifi-connection-status-log.md)
-- [05 - ESP32 WiFi Disconnect and Auto-reconnect routine](05-esp32-wifi-disconnect-and-auto-reconnect-routine.md)
+- [05 - ESP32 WiFi Disconnect and Polling Auto-reconnect routine](05-esp32-wifi-disconnect-and-auto-reconnect-routine.md)
 - [14 - ESP32 Wireless indicator LED](14-esp32-wireless-indicator-led.md)

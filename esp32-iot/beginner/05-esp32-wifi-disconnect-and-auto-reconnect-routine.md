@@ -1,12 +1,12 @@
-# 05 - ESP32 WiFi Disconnect and Auto-reconnect Routine
+# 05 - ESP32 WiFi Disconnect and Polling Auto-reconnect Routine
 
-Build a resilient connection manager on the ESP32 that uses event-driven callbacks to detect WiFi disconnections and triggers non-blocking auto-reconnect routines, using green and red LEDs for status indicators.
+Build a resilient connection manager on the ESP32 that uses loop-based status polling to detect WiFi disconnections and triggers auto-reconnect routines, using green and red LEDs for status indicators.
 
 ## Goal
-Learn how to register WiFi event callbacks, handle network disconnections, design non-blocking reconnect loops, and manage connection indicators.
+Learn how to check WiFi status, handle network disconnections, design status polling reconnect loops, and manage connection indicators.
 
 ## What You Will Build
-An ESP32 DevKitC connects to a local WiFi network. A Red LED is on GPIO 12, and a Green LED on GPIO 13. When connected, the Green LED is ON. If the router turns off, the ESP32 registers the disconnection event, lights the Red LED, and attempts to reconnect every 5 seconds in the background without blocking the main execution loop.
+An ESP32 DevKitC connects to a local WiFi network. A Red LED is on GPIO 12, and a Green LED on GPIO 13. When connected, the Green LED is ON. If the router turns off, the ESP32 detects the disconnection via status polling, lights the Red LED, and attempts to reconnect every 5 seconds in the loop.
 
 ## Parts Needed
 | Part | MbedO Component Type | Required in MbedO | Required on hardware |
@@ -28,7 +28,7 @@ An ESP32 DevKitC connects to a local WiFi network. A Red LED is on GPIO 12, and 
 
 ## Code
 ```cpp
-// WiFi Disconnect and Auto-reconnect routine (Event-driven callbacks)
+// WiFi Disconnect and Auto-reconnect routine (Loop-based Polling)
 #include <WiFi.h>
 
 const char* ssid = "Wokwi-GUEST";
@@ -36,47 +36,6 @@ const char* password = "";
 
 const int LED_RED = 12;   // Disconnected
 const int LED_GREEN = 13; // Connected
-
-// Non-blocking timer variables
-unsigned long lastReconnectAttempt = 0;
-const unsigned long RECONNECT_INTERVAL_MS = 5000; // Retry every 5 seconds
-
-// WiFi Event Callback handler
-// Automatically called by the ESP32 WiFi stack on network events
-void WiFiEvent(WiFiEvent_t event) {
-  switch (event) {
-    case SYSTEM_EVENT_STA_START:
-      Serial.println("[WiFi Event] Station Mode Started.");
-      break;
-      
-    case SYSTEM_EVENT_STA_CONNECTED:
-      Serial.println("[WiFi Event] Connected to access point.");
-      break;
-      
-    case SYSTEM_EVENT_STA_GOT_IP:
-      Serial.print("[WiFi Event] Assigned IP: ");
-      Serial.println(WiFi.localIP());
-      
-      // Update LED indicators
-      digitalWrite(LED_GREEN, HIGH);
-      digitalWrite(LED_RED, LOW);
-      break;
-      
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-      Serial.println("[WiFi Event] Connection lost! Triggering auto-reconnect...");
-      
-      // Update LED indicators
-      digitalWrite(LED_GREEN, LOW);
-      digitalWrite(LED_RED, HIGH);
-      
-      // Trigger background reconnect
-      WiFi.begin(ssid, password);
-      break;
-      
-    default:
-      break;
-  }
-}
 
 void setup() {
   Serial.begin(115200);
@@ -91,43 +50,25 @@ void setup() {
   
   Serial.println("\nResilient WiFi Connection Manager Starting...");
   
-  // 1. Register the WiFi event callback function
-  WiFi.onEvent(WiFiEvent);
-  
-  // 2. Configure STA mode and trigger connection
+  // Configure STA mode and trigger connection
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 }
 
 void loop() {
-  // 3. Monitor connection state non-blockingly
-  bool isConnected = (WiFi.status() == WL_CONNECTED);
-  unsigned long now = millis();
-  
-  if (!isConnected) {
-    // If disconnected, flash the Red LED every 500 ms
-    static unsigned long lastFlash = 0;
-    if (now - lastFlash >= 500) {
-      digitalWrite(LED_RED, !digitalRead(LED_RED));
-      lastFlash = now;
-    }
-    
-    // Periodically re-trigger WiFi.begin() if the automatic stack reconnect stalls
-    if (now - lastReconnectAttempt >= RECONNECT_INTERVAL_MS) {
-      Serial.println("[Main Loop] Retrying WiFi connection...");
-      WiFi.begin(ssid, password);
-      lastReconnectAttempt = now;
-    }
-  }
-  
-  // 4. Main application code runs here without blocking!
-  static unsigned long lastWork = 0;
-  if (now - lastWork >= 1000) {
-    Serial.print("[System Run] Active Time: ");
-    Serial.print(now / 1000);
-    Serial.print("s | Status: ");
-    Serial.println(isConnected ? "ONLINE" : "OFFLINE");
-    lastWork = now;
+  // Monitor connection state and control LEDs
+  if (WiFi.status() == WL_CONNECTED) {
+    digitalWrite(LED_GREEN, HIGH);
+    digitalWrite(LED_RED, LOW);
+    Serial.print("Assigned IP: ");
+    Serial.println(WiFi.localIP());
+    delay(5000); // Check status less frequently when connected
+  } else {
+    digitalWrite(LED_GREEN, LOW);
+    digitalWrite(LED_RED, HIGH);
+    Serial.println("Connection lost! Retrying WiFi connection...");
+    WiFi.begin(ssid, password);
+    delay(5000); // Wait 5 seconds before retrying
   }
 }
 ```
@@ -162,13 +103,12 @@ Resilient WiFi Connection Manager Starting...
 ## Code Walkthrough
 | Line | Check / Action |
 | --- | --- |
-| `WiFi.onEvent(WiFiEvent)` | Registers the callback handler to receive system network events. |
-| `SYSTEM_EVENT_STA_GOT_IP` | Triggers when the DHCP server assigns an IP address. |
-| `SYSTEM_EVENT_STA_DISCONNECTED` | Triggers when the link drops, starting the auto-reconnect sequence. |
-| `now - lastReconnectAttempt` | Runs the reconnect attempts in the background, keeping the loop active. |
+| `WiFi.status() == WL_CONNECTED` | Checks the Wi-Fi status against the connected enum. |
+| `WiFi.begin(ssid, password)` | Begins the asynchronous connection to the access point. |
+| `delay(5000)` | Wait interval before retrying connection or checking state. |
 
-## Hardware & Safety Concept: Event-Driven Network Programming
-In simple designs, loops use blocking checks like `while(WiFi.status() != WL_CONNECTED)`. If the connection drops during operation, the controller locks up in this loop, halting motor control or sensor safety checks. Using **Event-Driven WiFi Programming** and non-blocking timers, the ESP32 handles network reconnections in the background, letting the main control loop continue running.
+## Hardware & Safety Concept: Loop-Based Polling Network Programming
+In simple designs, loops use blocking checks like `while(WiFi.status() != WL_CONNECTED)`. If the connection drops during operation, the controller locks up in this loop, halting motor control or sensor safety checks. Using loop-based status polling with non-blocking checks and `delay()` cycles, the ESP32 handles network status checks and reconnects gracefully.
 
 ## Try This! (Challenges)
 1. **Buzzer disconnection alarm**: Sound a buzzer (GPIO 4) warning when the connection drops.
@@ -179,7 +119,7 @@ In simple designs, loops use blocking checks like `while(WiFi.status() != WL_CON
 | Symptom | Likely Cause | Fix |
 | --- | --- | --- |
 | Reconnect triggers continuously | Credentials incorrect | Check that the SSID name and password characters match the router settings |
-| System freezes during reconnection | Blocking calls in callback | Keep callback handlers simple; do not use delays or slow serial operations inside the event handler |
+| System freezes during connection | Infinite loops in loop() | Keep loop steps non-blocking; do not use long delay times inside loop() |
 | LED indicators don't update | LED polarity reversed | Verify the LED anode is connected to the GPIO and the cathode to ground |
 
 ## Mode Notes

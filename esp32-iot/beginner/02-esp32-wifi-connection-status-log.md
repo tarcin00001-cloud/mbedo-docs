@@ -18,25 +18,11 @@ No external wiring is required. The ESP32 uses its built-in WiFi antenna.
 
 ## Code
 ```cpp
-// WiFi Connection Status Log (Print state machine)
+// WiFi Connection Status Log (Print state machine status numbers)
 #include <WiFi.h>
 
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
-
-// Helper function to translate wl_status_t enums to string
-const char* getWiFiStatusString(wl_status_t status) {
-  switch (status) {
-    case WL_IDLE_STATUS:      return "WL_IDLE_STATUS (0: Temporary idle state)";
-    case WL_NO_SSID_AVAIL:    return "WL_NO_SSID_AVAIL (1: Configured SSID cannot be reached)";
-    case WL_SCAN_COMPLETED:   return "WL_SCAN_COMPLETED (2: AP scan finished)";
-    case WL_CONNECTED:        return "WL_CONNECTED (3: Connected successful)";
-    case WL_CONNECT_FAILED:   return "WL_CONNECT_FAILED (4: Handshake verification failed)";
-    case WL_CONNECTION_LOST:  return "WL_CONNECTION_LOST (5: Connection lost during session)";
-    case WL_DISCONNECTED:     return "WL_DISCONNECTED (6: Separated from network)";
-    default:                  return "UNKNOWN_STATUS";
-  }
-}
 
 void setup() {
   Serial.begin(115200);
@@ -48,62 +34,25 @@ void setup() {
   
   WiFi.mode(WIFI_STA);
   
-  // Print initial state before starting connection
-  wl_status_t initialStatus = WiFi.status();
   Serial.print("Initial State: ");
-  Serial.println(getWiFiStatusString(initialStatus));
+  Serial.println(WiFi.status()); // Prints status code (e.g. 6 = WL_DISCONNECTED)
   
-  Serial.print("Starting connection to "); Serial.println(ssid);
+  Serial.print("Starting connection to "); 
+  Serial.println(ssid);
   WiFi.begin(ssid, password);
-  
-  // Track and log status changes during connection
-  wl_status_t lastStatus = WL_IDLE_STATUS;
-  int checkCount = 0;
-  
-  while (WiFi.status() != WL_CONNECTED && checkCount < 40) {
-    wl_status_t currentStatus = WiFi.status();
-    
-    // Only log if the state has changed
-    if (currentStatus != lastStatus) {
-      Serial.print("Connection Progress -> State: ");
-      Serial.println(getWiFiStatusString(currentStatus));
-      lastStatus = currentStatus;
-    }
-    
-    delay(200);
-    checkCount++;
-  }
-  
-  // Print final connection state
-  wl_status_t finalStatus = WiFi.status();
-  Serial.println("----------------------------------");
-  Serial.print("Final Connection State: ");
-  Serial.println(getWiFiStatusString(finalStatus));
-  
-  if (finalStatus == WL_CONNECTED) {
-    Serial.print("Assigned IP: ");
-    Serial.println(WiFi.localIP());
-  }
-  Serial.println("----------------------------------");
 }
 
 void loop() {
-  static wl_status_t lastStatus = WL_IDLE_STATUS;
-  wl_status_t currentStatus = WiFi.status();
+  Serial.print("Connection State: ");
+  Serial.println(WiFi.status());
   
-  // Monitor connection states in real time
-  if (currentStatus != lastStatus) {
-    Serial.print("Real-time Connection Change -> Status: ");
-    Serial.println(getWiFiStatusString(currentStatus));
-    
-    if (currentStatus == WL_CONNECTED) {
-      Serial.print("IP Address: ");
-      Serial.println(WiFi.localIP());
-    }
-    lastStatus = currentStatus;
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.print("Assigned IP: ");
+    Serial.println(WiFi.localIP());
+    delay(5000); // Reduce log frequency once connected
+  } else {
+    delay(1000); // Check status every second while connecting
   }
-  
-  delay(1000);
 }
 ```
 
@@ -159,4 +108,4 @@ This project runs in MbedO **interpreted C++ mode**.
 ## Related Projects
 - [01 - ESP32 WiFi Station Connection](01-esp32-wifi-station-connection.md)
 - [03 - ESP32 WiFi IP Address Logger](03-esp32-wifi-ip-address-logger.md)
-- [05 - ESP32 WiFi Disconnect and Auto-reconnect routine](05-esp32-wifi-disconnect-and-auto-reconnect-routine.md)
+- [05 - ESP32 WiFi Disconnect and Polling Auto-reconnect routine](05-esp32-wifi-disconnect-and-auto-reconnect-routine.md)

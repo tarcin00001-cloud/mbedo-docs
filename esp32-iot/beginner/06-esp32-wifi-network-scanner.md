@@ -18,63 +18,8 @@ No external wiring is required. The ESP32 uses its built-in WiFi antenna.
 
 ## Code
 ```cpp
-// WiFi Network Scanner (Scan networks and log details)
+// WiFi Network Scanner
 #include <WiFi.h>
-
-// Helper to translate encryption type enums to readable strings
-const char* getEncryptionTypeString(wifi_auth_mode_t type) {
-  switch (type) {
-    case WIFI_AUTH_OPEN:            return "Open (Unsecured)";
-    case WIFI_AUTH_WEP:             return "WEP (Legacy)";
-    case WIFI_AUTH_WPA_PSK:         return "WPA-PSK";
-    case WIFI_AUTH_WPA2_PSK:        return "WPA2-PSK (Standard)";
-    case WIFI_AUTH_WPA_WPA2_PSK:    return "WPA/WPA2-PSK";
-    case WIFI_AUTH_WPA2_ENTERPRISE: return "WPA2-Enterprise";
-    case WIFI_AUTH_WPA3_PSK:        return "WPA3-PSK (Secure)";
-    default:                        return "UNKNOWN";
-  }
-}
-
-void performNetworkScan() {
-  Serial.println("Starting WiFi scan...");
-  
-  // 1. Scan for networks
-  // scanNetworks(async, show_hidden, passive)
-  // Returns number of networks found (negative values indicate errors)
-  int numNetworks = WiFi.scanNetworks(false, false, false);
-  
-  if (numNetworks < 0) {
-    Serial.println("WiFi scan failed!");
-    return;
-  }
-  
-  Serial.println("Scan complete.");
-  Serial.print(numNetworks);
-  Serial.println(" networks found:");
-  Serial.println("------------------------------------------------------------------");
-  Serial.printf("%-3s | %-25s | %-7s | %-7s | %s\n", "Num", "SSID", "RSSI", "Channel", "Security");
-  Serial.println("------------------------------------------------------------------");
-  
-  // 2. Loop through and log details of each network
-  for (int i = 0; i < numNetworks; ++i) {
-    String ssid = WiFi.SSID(i);
-    int rssi = WiFi.RSSI(i);
-    int channel = WiFi.channel(i);
-    wifi_auth_mode_t encType = WiFi.encryptionType(i);
-    
-    Serial.printf("%-3d | %-25.25s | %-4d dBm | %-7d | %s\n", 
-                  i + 1, 
-                  ssid.c_str(), 
-                  rssi, 
-                  channel, 
-                  getEncryptionTypeString(encType));
-    delay(10);
-  }
-  Serial.println("------------------------------------------------------------------\n");
-  
-  // 3. Clear scan results from memory
-  WiFi.scanDelete(); 
-}
 
 void setup() {
   Serial.begin(115200);
@@ -89,7 +34,8 @@ void setup() {
 }
 
 void loop() {
-  performNetworkScan();
+  Serial.println("Starting WiFi scan...");
+  WiFi.scanNetworks();
   
   // Wait 10 seconds before scanning again
   delay(10000);

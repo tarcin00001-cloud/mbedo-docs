@@ -164,7 +164,7 @@ In the 2.4 GHz band, adjacent channels overlap and interfere with each other (e.
 | The ESP32 crashes on loop | Memory leak | Ensure `WiFi.scanDelete()` is called after each scan to release memory |
 
 ## Mode Notes
-This project runs in MbedO **interpreted C++ mode**.
+This project runs in MbedO **compiled C++ mode** only due to complex loop analysis and custom array variables.
 
 ## Related Projects
 - [06 - ESP32 WiFi Network Scanner](06-esp32-wifi-network-scanner.md)

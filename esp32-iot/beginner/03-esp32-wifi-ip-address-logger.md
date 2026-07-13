@@ -24,36 +24,6 @@ No external wiring is required. The ESP32 uses its built-in WiFi antenna.
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 
-void printNetworkDetails() {
-  Serial.println("\n--- Connected Network Configuration ---");
-  
-  // 1. Get Local IP Address
-  Serial.print("Local IP Address:  ");
-  Serial.println(WiFi.localIP());
-  
-  // 2. Get Subnet Mask
-  Serial.print("Subnet Mask:       ");
-  Serial.println(WiFi.subnetMask());
-  
-  // 3. Get Default Gateway IP (Router address)
-  Serial.print("Gateway IP:        ");
-  Serial.println(WiFi.gatewayIP());
-  
-  // 4. Get DNS Server IP Address
-  Serial.print("DNS Server IP:     ");
-  Serial.println(WiFi.dnsIP());
-  
-  // 5. Get Router BSSID (Physical MAC Address of target router)
-  Serial.print("Router MAC (BSSID): ");
-  Serial.println(WiFi.BSSIDstr());
-  
-  // 6. Get ESP32 Local MAC Address
-  Serial.print("ESP32 MAC Address: ");
-  Serial.println(WiFi.macAddress());
-  
-  Serial.println("---------------------------------------\n");
-}
-
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -61,29 +31,42 @@ void setup() {
   Serial.println("Initializing WiFi Network Scan...");
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  
-  Serial.println("\nConnected successfully!");
-  
-  // Print network configuration details
-  printNetworkDetails();
 }
 
 void loop() {
-  // Periodically log details every 10 seconds
-  static unsigned long lastLog = 0;
-  if (millis() - lastLog >= 10000) {
-    if (WiFi.status() == WL_CONNECTED) {
-      printNetworkDetails();
-    } else {
-      Serial.println("Network offline. Reconnecting...");
-    }
-    lastLog = millis();
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nConnected successfully!");
+    Serial.println("\n--- Connected Network Configuration ---");
+    
+    // 1. Get Local IP Address
+    Serial.print("Local IP Address:  ");
+    Serial.println(WiFi.localIP());
+    
+    // 2. Get Subnet Mask
+    Serial.print("Subnet Mask:       ");
+    Serial.println(WiFi.subnetMask());
+    
+    // 3. Get Default Gateway IP (Router address)
+    Serial.print("Gateway IP:        ");
+    Serial.println(WiFi.gatewayIP());
+    
+    // 4. Get DNS Server IP Address
+    Serial.print("DNS Server IP:     ");
+    Serial.println(WiFi.dnsIP());
+    
+    // 5. Get Router BSSID (Physical MAC Address of target router)
+    Serial.print("Router MAC (BSSID): ");
+    Serial.println(WiFi.BSSIDstr());
+    
+    // 6. Get ESP32 Local MAC Address
+    Serial.print("ESP32 MAC Address: ");
+    Serial.println(WiFi.macAddress());
+    
+    Serial.println("---------------------------------------\n");
+    delay(10000); // Log details every 10 seconds
+  } else {
+    Serial.print(".");
+    delay(500);
   }
 }
 ```
